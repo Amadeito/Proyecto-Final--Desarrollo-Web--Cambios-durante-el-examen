@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Médico - Turnos</title></head>
+<body>
+<h2>Panel Médico (demo)</h2>
+<select id="clinic"></select>
+<button id="join">Unirse</button>
+<ul id="queue"></ul>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+let socket;
+async function loadClinics(){
+  const res = await fetch('http://localhost:4000/api/clinics');
+  const clinics = await res.json();
+  const sel = document.getElementById('clinic');
+  clinics.forEach(c => { const o = document.createElement('option'); o.value=c.ClinicId; o.textContent = c.Name; sel.appendChild(o); });
+}
+loadClinics();
+
+document.getElementById('join').addEventListener('click', async ()=>{
+  const clinicId = document.getElementById('clinic').value;
+  socket = io('http://localhost:4000', { auth: { token: localStorage.getItem('token') } });
+  socket.emit('joinClinic', clinicId);
+  socket.on('turnCreated', (data) => { console.log('turnCreated', data); loadQueue(clinicId); });
+  socket.on('turnUpdated', (data) => { console.log('turnUpdated', data); loadQueue(clinicId); });
+  loadQueue(clinicId);
+});
+
+async function loadQueue(clinicId){
+  const res = await fetch(`http://localhost:4000/api/turns/queue/${clinicId}`);
+  const q = await res.json();
+  const ul = document.getElementById('queue'); ul.innerHTML='';
+  q.forEach(t => {
+    const li = document.createElement('li');
+    li.innerHTML = `#${t.Number} - ${t.FirstName} ${t.LastName} - ${t.Status} <button onclick="call(${t.TurnId})">Call</button> <button onclick="finish(${t.TurnId})">Finish</button> <button onclick="absent(${t.TurnId})">Absent</button>`;
+    ul.appendChild(li);
+  });
+}
+
+async function call(turnId){
+  await fetch(`http://localhost:4000/api/turns/${turnId}/call`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ doctorId: null }) });
+}
+async function finish(turnId){
+  await fetch(`http://localhost:4000/api/turns/${turnId}/finish`, { method: 'POST' });
+}
+async function absent(turnId){
+  await fetch(`http://localhost:4000/api/turns/${turnId}/absent`, { method: 'POST' });
+}
+</script>
+</body>
+</html>

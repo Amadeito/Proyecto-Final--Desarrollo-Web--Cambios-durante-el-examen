@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Recepción - Turnos</title></head>
+<body>
+<h2>Recepción</h2>
+<form id="patientForm">
+  <input id="firstName" placeholder="Nombre"><br>
+  <input id="lastName" placeholder="Apellido"><br>
+  <select id="clinic"></select><br>
+  <select id="priority"><option value="1">Alta</option><option value="2">Media</option><option value="3" selected>Baja</option></select><br>
+  <button>Registrar y Generar Turno</button>
+</form>
+<ul id="messages"></ul>
+<script>
+async function loadClinics(){
+  const res = await fetch('http://localhost:4000/api/clinics');
+  const clinics = await res.json();
+  const sel = document.getElementById('clinic');
+  clinics.forEach(c => { const o = document.createElement('option'); o.value=c.ClinicId; o.textContent = c.Name; sel.appendChild(o); });
+}
+loadClinics();
+
+document.getElementById('patientForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const firstName = document.getElementById('firstName').value;
+  const lastName = document.getElementById('lastName').value;
+  const clinicId = document.getElementById('clinic').value;
+  const priority = document.getElementById('priority').value;
+  // create patient
+  const pRes = await fetch('http://localhost:4000/api/patients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firstName,lastName})});
+  const pjson = await pRes.json();
+  const patientId = pjson.patientId;
+  // create turn
+  const tRes = await fetch('http://localhost:4000/api/turns',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({patientId, clinicId, priority})});
+  const tjson = await tRes.json();
+  document.getElementById('messages').innerHTML += `<li>Turno generado: ${tjson.number} (id ${tjson.turnId})</li>`;
+});
+</script>
+</body>
+</html>
