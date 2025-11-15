@@ -1,6 +1,6 @@
 # Sistema Visual de Cola de Turnos - Node.js
 
-Repositorio del proyecto (estructura y archivos listos para copiar al repositorio GitHub).
+Repositorio del proyecto.
 
 Incluye: backend en Node.js + Express + Socket.IO, conexión a SQL Server, frontend mínimo (HTML/JS) para Recepción, Médico y Display, script SQL de creación y datos de ejemplo.
 
